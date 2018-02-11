@@ -1,7 +1,47 @@
-import { exec } from 'child_process'
+import "./polyfill"
+import { Injector } from "./di/injector";
 
-let path = 'C:/Users/scope/Documents/angular_projects/angular4-test';
+export function Injectable()
+{
+    return (target)=>{
+    }
+}
 
-exec('cd "'+path+'" && ng build --prod --aot', (error : Error, output : string , err : string) => {
-    console.log(error, output);
-});
+@Injectable()
+export class Service{
+    constructor()
+    {   
+
+    }
+
+    sayHi()
+    {
+        console.log('sayHi from Service');
+    }
+}
+
+@Injectable()
+export class Service2{
+    service : Service;
+    constructor(public injector : Injector)
+    {
+        this.service = injector.resolve(Service);
+        this.service.sayHi();
+    }
+
+    sayHi()
+    {
+      this.service.sayHi();
+      console.log(this.service);
+    }
+}
+
+
+let injector = new Injector();
+injector.register({ provide : Service , useClass : Service})
+
+let injector2 = injector.create();
+injector2.register({ provide : Service2 , useClass : Service2})
+
+let service = injector2.resolve(Service2)
+service.sayHi();

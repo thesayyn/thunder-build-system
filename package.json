@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build" : "tsc && node ./dist/app.js"
+    "build": "tsc && node ./dist/app.js"
   },
   "devDependencies": {
     "@angular/cli": "^1.6.8",
@@ -15,6 +15,7 @@
     "typescript": "2.4.2"
   },
   "dependencies": {
-    "express": "^4.16.2"
+    "express": "^4.16.2",
+    "reflect-metadata": "^0.1.12"
   }
 }
