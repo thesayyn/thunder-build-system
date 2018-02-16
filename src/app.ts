@@ -1,47 +1,66 @@
-import "./polyfill"
-import { Injector } from "./di/injector";
+import './polyfill';
+import { TestModule, XService } from "./testmodule/module";
+import { Injector } from './di/injector';
+import { Module } from './metadata/module';
 
-export function Injectable()
-{
-    return (target)=>{
+class Platform{
+
+    _registeredProviders = [];
+
+    bootstrapModule(module : any){
+
+        this.compileModule(module);
+      
     }
-}
 
-@Injectable()
-export class Service{
-    constructor()
+
+    private compileModule(module : Module)
     {   
-
+        this._getModuleExportedInjectables(module);
+        console.log(this._registeredProviders);
     }
 
-    sayHi()
+
+    private _getModuleExportedInjectables(module : any)
     {
-        console.log('sayHi from Service');
+        let metadata = this._getModuleMetadata(module)
+
+        if(metadata.services && metadata.services.length > 0){
+            this._registeredProviders.push(...metadata.services);
+        }
+        
+        module._injector = new Injector([...(metadata.services || []),...(metadata.declarations || [])]);
+
+        
+        let exports = (metadata.exports || []).map(module => {
+            return this._getModuleExportedInjectables(module)
+        });
+        
+
+        let injectables = [];
+        let imported = [];
+
+        if(exports.length > 0)
+        {
+            injectables.push(...exports);
+        }
+
+        if((metadata.services || [] ).length > 0)
+        {
+            injectables.push(...metadata.services);
+        }
+        
+    
+        
+        return [].concat(...injectables);
+    }
+
+    private _getModuleMetadata(module : any) : Module
+    {
+        return Reflect.getMetadata('module', module) as Module;
     }
 }
 
-@Injectable()
-export class Service2{
-    service : Service;
-    constructor(public injector : Injector)
-    {
-        this.service = injector.resolve(Service);
-        this.service.sayHi();
-    }
+let platform = new Platform();
+platform.bootstrapModule(TestModule)
 
-    sayHi()
-    {
-      this.service.sayHi();
-      console.log(this.service);
-    }
-}
-
-
-let injector = new Injector();
-injector.register({ provide : Service , useClass : Service})
-
-let injector2 = injector.create();
-injector2.register({ provide : Service2 , useClass : Service2})
-
-let service = injector2.resolve(Service2)
-service.sayHi();
